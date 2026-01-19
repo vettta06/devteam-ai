@@ -1,9 +1,11 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.database import get_db
+from app.database import get_db, Base, engine
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Dev Team AI",
@@ -33,4 +35,10 @@ def create_user_endpoint(
     user: schemas.UserCreate, db: Session = Depends(get_db)  # noqa: B008
 ) -> schemas.UserRead:
     """Создание пользователя."""
-    return crud.user.create_user(db=db, user=user)
+    try:
+        return crud.user.create_user(db=db, user=user)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

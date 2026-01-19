@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UserBase(BaseModel):
@@ -12,7 +12,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Пользователь + пароль."""
 
-    password: str
+    password: str = Field(min_length=4, max_length=72)
 
 
 class UserRead(UserBase):
