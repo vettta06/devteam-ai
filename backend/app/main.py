@@ -3,7 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.database import get_db, Base, engine
+from app.database import Base, engine, get_db
 
 Base.metadata.create_all(bind=engine)
 
@@ -39,6 +39,13 @@ def create_user_endpoint(
         return crud.user.create_user(db=db, user=user)
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
+
+
+@app.get("/users/{email}", response_model=schemas.UserRead)
+def get_user(email: str, db: Session = Depends(get_db)):
+    db_user = crud.user.get_user_by_email(db, email=email)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user

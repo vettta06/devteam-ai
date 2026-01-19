@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserBase(BaseModel):
     """Базовая модель пользователя."""
 
-    email: str
+    email: EmailStr
 
 
 class UserCreate(UserBase):
