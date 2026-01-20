@@ -33,3 +33,8 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
     if not verify_password(password, user.hashed_password):
         return None
     return user
+
+
+def get_user_by_id(db: Session, user_id: int) -> User | None:
+    """Получение пользователя по id."""
+    return db.query(User).filter(User.id == user_id).first()
