@@ -5,6 +5,7 @@ class Token(BaseModel):
     """Модель для ответа клиенту."""
 
     access_token: str
+    refresh_token: str
     token_type: str
 
 

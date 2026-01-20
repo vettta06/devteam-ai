@@ -61,3 +61,11 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+def create_refresh_token(data: dict, expires_delta: timedelta) -> str:
+    """Создание токена для обновления."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + expires_delta
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
