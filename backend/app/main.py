@@ -119,3 +119,11 @@ async def refresh_access_token(request: Request, db: Session = Depends(get_db)) 
         "refresh_token": new_refresh_token,
         "token_type": "bearer",
     }
+
+
+@app.post("/logout")
+async def logout(request: Request, db: Session = Depends(get_db)):
+    """Выход из системы."""
+    token = get_token_from_request(request)
+    crud.token.delete_refresh_token(db, token)
+    return {"message": "Successfully logged out"}
