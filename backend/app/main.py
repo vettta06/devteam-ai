@@ -143,3 +143,10 @@ async def update_user_me(
         return schemas.UserRead.from_orm(updated_user)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.get("/users/", response_model=list[schemas.UserList])
+async def get_users(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
+    """Получение списка всех пользователей."""
+    users = crud.user.get_all_users(db, skip=skip, limit=limit)
+    return [schemas.UserList.from_orm(user) for user in users]

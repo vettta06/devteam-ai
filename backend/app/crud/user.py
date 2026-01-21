@@ -56,3 +56,8 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User:
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
+    """Получение всех пользователей."""
+    return db.query(User).offset(skip).limit(limit).all()
