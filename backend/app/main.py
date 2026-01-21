@@ -150,3 +150,15 @@ async def get_users(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)
     """Получение списка всех пользователей."""
     users = crud.user.get_all_users(db, skip=skip, limit=limit)
     return [schemas.UserList.from_orm(user) for user in users]
+
+
+@app.delete("/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """Удаление пользователя по id."""
+    success = crud.user.delete_user(db, user_id=user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"massage": "User deleted successfully"}

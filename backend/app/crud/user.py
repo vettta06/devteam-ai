@@ -61,3 +61,13 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User:
 def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
     """Получение всех пользователей."""
     return db.query(User).offset(skip).limit(limit).all()
+
+
+def delete_user(db: Session, user_id: int) -> bool:
+    """Удаление пользователя по id."""
+    user = get_user_by_id(db, user_id)
+    if not user:
+        return False
+    db.delete(user)
+    db.commit()
+    return True
