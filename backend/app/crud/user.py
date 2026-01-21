@@ -46,7 +46,10 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User:
     db_user = get_user_by_id(db, user_id=user_id)
     if not db_user:
         raise ValueError("User not found")
-    if user_update.email:
+    if user_update.email and user_update.email != db_user.email:
+        exsiting = get_user_by_email(db, email=user_update.email)
+        if exsiting:
+            raise ValueError("Email already registred")
         db_user.email = user_update.email
     if user_update.password:
         db_user.hashed_password = get_password_hash(user_update.password)

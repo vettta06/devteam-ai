@@ -136,7 +136,10 @@ async def update_user_me(
     db: Session = Depends(get_db),
 ):
     """Обновление профиля текущего пользователя."""
-    updated_user = crud.user.update_user(
-        db, user_id=current_user.id, user_update=user_update
-    )
-    return schemas.UserRead.from_orm(updated_user)
+    try:
+        updated_user = crud.user.update_user(
+            db, user_id=current_user.id, user_update=user_update
+        )
+        return schemas.UserRead.from_orm(updated_user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
