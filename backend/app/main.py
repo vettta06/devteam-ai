@@ -1,6 +1,6 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -11,6 +11,8 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     get_current_user,
+    get_token_from_request,
+    verify_refresh_token,
 )
 from app.database import Base, engine, get_db
 from app.models.user import User
@@ -24,10 +26,10 @@ app = FastAPI(
 )
 
 
-@app.get("/health")
-async def check_health():
-    """Проверка работы сервера."""
-    return {"message": "Hi"}
+@app.get("/users/me", response_model=schemas.UserRead)
+async def read_users_me(cur_user: User = Depends(get_current_user)):
+    """Получение информации о пользователе."""
+    return schemas.UserRead.from_orm(cur_user)
 
 
 @app.get("/db-test'")
@@ -77,9 +79,20 @@ async def login(
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_exp
     )
+    refresh_expires = timedelta(days=7)
     refresh_token = create_refresh_token(
-        data={"sub": str(user.id)}, expires_delta=timedelta(days=7)
+        data={"sub": str(user.id)}, expires_delta=refresh_expires
     )
+
+    from app.crud.token import create_refresh_token as create_db_token
+
+    create_db_token(
+        db=db,
+        user_id=user.id,
+        token=refresh_token,
+        expires_at=datetime.now(timezone.utc) + refresh_expires,
+    )
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -87,7 +100,22 @@ async def login(
     }
 
 
-@app.get("/users/me", response_model=schemas.UserRead)
-async def read_users_me(cur_user: User = Depends(get_current_user)) -> User:
-    """Получение информации о пользователе."""
-    return cur_user
+@app.post("/refresh", response_model=schemas.token.Token)
+async def refresh_access_token(request: Request, db: Session = Depends(get_db)) -> dict:
+    """Обновление access-токена."""
+    token = get_token_from_request(request)
+    current_user = verify_refresh_token(token, db)
+    crud.token.delete_refresh_token(db, token)
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    new_access_token = create_access_token(
+        data={"sub": str(current_user.id)}, expires_delta=access_token_expires
+    )
+    new_refresh_token = create_refresh_token(
+        data={"sub": str(current_user.id)}, expires_delta=timedelta(days=7)
+    )
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer",
+    }

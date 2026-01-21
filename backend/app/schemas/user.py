@@ -26,3 +26,7 @@ class UserRead(UserBase):
         """Загрузка настроек."""
 
         from_attributes = True
+
+
+class Config:
+    orm_mode = True
