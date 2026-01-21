@@ -153,10 +153,7 @@ async def get_users(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)
 
 
 @app.delete("/users/{user_id}")
-async def delete_user(
-    user_id: int,
-    db: Session = Depends(get_db)
-):
+async def delete_user(user_id: int, db: Session = Depends(get_db)):
     """Удаление пользователя по id."""
     success = crud.user.delete_user(db, user_id=user_id)
     if not success:
