@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -23,10 +24,11 @@ class UserRead(UserBase):
     created_at: datetime
 
     class Config:
-        """Загрузка настроек."""
-
         from_attributes = True
 
 
-class Config:
-    orm_mode = True
+class UserUpdate(UserBase):
+    """Обновление пользователя."""
+
+    email: Optional[str] = None
+    password: Optional[str] = None

@@ -127,3 +127,16 @@ async def logout(request: Request, db: Session = Depends(get_db)):
     token = get_token_from_request(request)
     crud.token.delete_refresh_token(db, token)
     return {"message": "Successfully logged out"}
+
+
+@app.put("/users/me", response_model=schemas.UserRead)
+async def update_user_me(
+    user_update: schemas.UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Обновление профиля текущего пользователя."""
+    updated_user = crud.user.update_user(
+        db, user_id=current_user.id, user_update=user_update
+    )
+    return schemas.UserRead.from_orm(updated_user)
