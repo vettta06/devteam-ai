@@ -169,3 +169,15 @@ async def delete_user(
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted successfully"}
+
+
+@app.get("/confirm-email/{token}")
+async def confirm_email(token: str, db: Session = Depends(get_db)):
+    """Подтверждение email по токену."""
+    user = crud.user.get_user_by_confirmation_token(db, token)
+    if not user:
+        raise HTTPException(status_code=404, detail="Invalid or expired token")
+    user.is_active = True
+    user.confirmation_token = None
+    db.commit()
+    return {"message": "Email confirmed successfully!"}

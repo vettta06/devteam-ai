@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, Request, status
@@ -162,3 +163,8 @@ def get_current_admin_user(cur_user: User = Depends(get_current_user)) -> User:
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
         )
     return cur_user
+
+
+def generate_confirmation_token() -> str:
+    """Генерация токена подтверждения."""
+    return secrets.token_urlsafe(32)
