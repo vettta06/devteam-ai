@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
+    get_current_admin_user,
     get_current_user,
     get_token_from_request,
     verify_refresh_token,
@@ -146,16 +147,25 @@ async def update_user_me(
 
 
 @app.get("/users/", response_model=list[schemas.UserList])
-async def get_users(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
+async def get_users(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
     """Получение списка всех пользователей."""
     users = crud.user.get_all_users(db, skip=skip, limit=limit)
     return [schemas.UserList.from_orm(user) for user in users]
 
 
 @app.delete("/users/{user_id}")
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
     """Удаление пользователя по id."""
     success = crud.user.delete_user(db, user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"massage": "User deleted successfully"}
+    return {"message": "User deleted successfully"}

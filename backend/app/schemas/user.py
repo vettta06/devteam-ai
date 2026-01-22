@@ -21,6 +21,7 @@ class UserRead(UserBase):
 
     id: int
     is_active: bool
+    is_admin: bool
     created_at: datetime
 
     class Config:
@@ -38,7 +39,8 @@ class UserList(UserBase):
     """Получение всех пользователейю"""
 
     id: int
-    is_active: int
+    is_active: bool
+    is_admin: bool
     created_at: datetime
 
     class Config:
