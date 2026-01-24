@@ -1,26 +1,24 @@
 import uuid
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from app.database import Base, get_db
-from app.main import app
+import app.core.config as config_module
+from app.core.config import TestSettings
 
-env_path = Path(__file__).parent.parent.parent / ".env.test"
-if env_path.exists():
-    from dotenv import load_dotenv
+config_module.settings = TestSettings()
 
-    load_dotenv(env_path, override=True)
+from app.database import Base, get_db  # noqa: E402
+from app.main import app  # noqa: E402
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-
+SQLALCHEMY_DATABASE_URL = config_module.settings.DATABASE_URL
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 Base.metadata.create_all(bind=engine)
 
 
@@ -35,7 +33,7 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def client():
     return TestClient(app)
 
@@ -59,8 +57,8 @@ def auth_token(client, test_user):
 def clean_db():
     """Очищает БД перед каждым тестом."""
     db = TestingSessionLocal()
-    db.execute(text("DELETE FROM tasks;"))
     db.execute(text("DELETE FROM refresh_tokens;"))
+    db.execute(text("DELETE FROM tasks;"))
     db.execute(text("DELETE FROM users;"))
     db.commit()
     db.close()
