@@ -11,4 +11,13 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
+class TestSettings(Settings):
+    DATABASE_URL: str = "sqlite:///./test.db"
+    SECRET_KEY: str = "test-secret-key-for-tests-only"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+    class Config:
+        env_file = None
+
+
 settings = Settings()
