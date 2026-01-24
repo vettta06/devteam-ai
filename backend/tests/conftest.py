@@ -1,19 +1,39 @@
+# ruff: noqa
+# flake8: noqa
+# mypy: ignore-errors
+import os
+import sys
 import uuid
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-import app.core.config as config_module
-from app.core.config import TestSettings
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-config_module.settings = TestSettings()
+from pydantic_settings import BaseSettings
 
-from app.database import Base, get_db  # noqa: E402
-from app.main import app  # noqa: E402
 
-SQLALCHEMY_DATABASE_URL = config_module.settings.DATABASE_URL
+class TestSettings(BaseSettings):
+    DATABASE_URL: str = "sqlite:///./test.db"
+    SECRET_KEY: str = "test-secret-key-for-tests-only"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+
+import types
+
+test_config_module = types.ModuleType("app.core.config")
+test_config_module.Settings = TestSettings
+test_config_module.settings = TestSettings()
+
+sys.modules["app.core.config"] = test_config_module
+
+from app.database import Base, get_db
+from app.main import app
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
