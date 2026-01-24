@@ -1,3 +1,4 @@
+import uuid
 from pathlib import Path
 
 import pytest
@@ -39,9 +40,9 @@ def client():
     return TestClient(app)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_user():
-    return {"email": "test@example.com", "password": "1234"}
+    return {"email": f"test_{uuid.uuid4()}@example.com", "password": "1234"}
 
 
 @pytest.fixture(scope="function")
