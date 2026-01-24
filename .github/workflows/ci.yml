@@ -26,6 +26,7 @@ jobs:
         run: |
           cd backend 
           pip install -r requirements.txt
+          pip install pytest httpx
         
       - name: Run Black (formatting check)
         run: |
@@ -40,4 +41,4 @@ jobs:
       - name: Run Tests
         run: |
           cd backend
-          pytest
+          python -m pytest tests/ -v
