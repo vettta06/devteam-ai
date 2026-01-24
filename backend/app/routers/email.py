@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from app.crud.user import get_user_by_confirmation_token
 from app.database import get_db
 
-email_router = APIRouter()
+router = APIRouter()
 
 
-@email_router.get("/confirm-email/{token}")
+@router.get("/confirm-email/{token}")
 async def confirm_email(token: str, db: Session = Depends(get_db)):
     """Подтверждение email по токену."""
     user = get_user_by_confirmation_token(db, token)

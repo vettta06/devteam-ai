@@ -13,16 +13,16 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserList, UserRead, UserUpdate
 
-user_router = APIRouter()
+router = APIRouter()
 
 
-@user_router.get("/me", response_model=UserRead)
+@router.get("/me", response_model=UserRead)
 async def read_users_me(cur_user: User = Depends(get_current_user)):
     """Получение информации о пользователе."""
     return UserRead.from_orm(cur_user)
 
 
-@user_router.post("/", response_model=UserRead)
+@router.post("/", response_model=UserRead)
 async def create_user_endpoint(
     user: UserCreate, db: Session = Depends(get_db)
 ) -> UserRead:
@@ -35,7 +35,7 @@ async def create_user_endpoint(
         ) from e
 
 
-@user_router.get("/{email}", response_model=UserRead)
+@router.get("/{email}", response_model=UserRead)
 async def get_user(email: str, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db, email=email)
     if db_user is None:
@@ -43,7 +43,7 @@ async def get_user(email: str, db: Session = Depends(get_db)):
     return db_user
 
 
-@user_router.put("/me", response_model=UserRead)
+@router.put("/me", response_model=UserRead)
 async def update_user_me(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user),
@@ -57,7 +57,7 @@ async def update_user_me(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@user_router.get("/", response_model=list[UserList])
+@router.get("/", response_model=list[UserList])
 async def get_users(
     skip: int = 0,
     limit: int = 10,
@@ -69,7 +69,7 @@ async def get_users(
     return [UserList.from_orm(user) for user in users]
 
 
-@user_router.delete("/{user_id}")
+@router.delete("/{user_id}")
 async def delete_user_endpoint(
     user_id: int,
     db: Session = Depends(get_db),

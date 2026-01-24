@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
-from app.routers import auth, email, users
+from app.routers import auth, email, tasks, users
 
 Base.metadata.create_all(bind=engine)
 
@@ -14,9 +14,10 @@ app = FastAPI(
     description="Многоагентная система для разработчиков",
 )
 
-app.include_router(auth.auth_router, prefix="/auth", tags=["auth"])
-app.include_router(users.user_router, prefix="/users", tags=["users"])
-app.include_router(email.email_router, prefix="/email", tags=["email"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(email.router, prefix="/email", tags=["email"])
+app.include_router(tasks.router, prefix="/tasks", tags=["task"])
 
 
 @app.get("/health")

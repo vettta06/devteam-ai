@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -16,3 +17,5 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     confirmation_token = Column(String, unique=True, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    tasks = relationship("Task", back_populates="owner")

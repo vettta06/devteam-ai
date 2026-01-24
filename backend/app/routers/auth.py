@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import create_access_token, create_refresh_token
+from app.core.security import create_access_token, create_refresh_token, verify_password
 from app.core.tokens import get_token_from_request, verify_refresh_token
 from app.crud import token as crud_token
 from app.crud.token import create_refresh_token as create_db_token
@@ -13,16 +13,16 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.token import Token
 
-auth_router = APIRouter()
+router = APIRouter()
 
 
-@auth_router.post("/login", response_model=Token)
+@router.post("/login", response_model=Token)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ) -> dict:
     """Вход в систему."""
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not user.verify_password(form_data.password):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -51,7 +51,7 @@ async def login(
     }
 
 
-@auth_router.post("/refresh", response_model=Token)
+@router.post("/refresh", response_model=Token)
 async def refresh_access_token(request: Request, db: Session = Depends(get_db)) -> dict:
     """Обновление access-токена."""
     token = get_token_from_request(request)
@@ -72,7 +72,7 @@ async def refresh_access_token(request: Request, db: Session = Depends(get_db)) 
     }
 
 
-@auth_router.post("/logout")
+@router.post("/logout")
 async def logout(request: Request, db: Session = Depends(get_db)):
     """Выход из системы."""
     token = get_token_from_request(request)
