@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
@@ -5,6 +7,12 @@ from sqlalchemy.orm import sessionmaker
 
 from app.database import Base, get_db
 from app.main import app
+
+env_path = Path(__file__).parent.parent.parent / ".env.test"
+if env_path.exists():
+    from dotenv import load_dotenv
+
+    load_dotenv(env_path, override=True)
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
