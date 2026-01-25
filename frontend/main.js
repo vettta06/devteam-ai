@@ -3,21 +3,20 @@ const API_BASE = "http://localhost:8000";
 function render(page) {
   const app = document.getElementById("app");
   switch (page) {
-    case "login":
-      app.innerHTML = `
-        <h2>Вход</h2>
-        <form id="login-form">
-          <input type="email" placeholder="Email" required /><br><br>
-          <input type="password" placeholder="Пароль" required /><br><br>
-          <button type="submit">Войти</button>
-        </form>
-        <p><a href="#/register">Нет аккаунта? Зарегистрироваться</a></p>
-        <div id="login-error" style="color: red; margin-top: 10px;"></div>
-      `;
-      document
-        .getElementById("login-form")
-        .addEventListener("submit", handleLogin);
-      break;
+    case 'login':
+        app.innerHTML = `
+            <div class="auth-container">
+            <h2 class="auth-title">Вход</h2>
+            <form id="login-form" class="auth-form">
+                <input type="email" placeholder="Email" required />
+                <input type="password" placeholder="Пароль" required />
+                <button type="submit">Войти</button>
+            </form>
+            <p class="auth-link"><a href="#/register">Нет аккаунта? Зарегистрироваться</a></p>
+            </div>
+        `;
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        break;
 
     case "register":
       app.innerHTML = `
@@ -37,8 +36,7 @@ function render(page) {
 
     case "tasks":
       app.innerHTML = `
-            <h2>Мои задачи</h2>
-            <button id="create-task-btn">Создать задачу</button>
+            <h2>Мои задачи <button id="create-task-btn" class="create-task-btn">+</button></h2>
             <div id="task-form" style="display: none; margin: 20px 0;">
             <h3>Новая задача</h3>
             <form id="new-task-form">
