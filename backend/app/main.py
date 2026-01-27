@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
-from app.routers import auth, email, tasks, users
+from app.routers import ai, auth, email, tasks, users
 
 Base.metadata.create_all(bind=engine)
 
@@ -33,6 +33,7 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(email.router, prefix="/email", tags=["email"])
 app.include_router(tasks.router, prefix="/tasks", tags=["task"])
+app.include_router(ai.router, prefix="/ai", tags=["ai"])
 
 
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
@@ -51,11 +52,6 @@ async def serve_frontend(full_path: str):
     if os.path.exists(file_path):
         return FileResponse(file_path)
     return {"detail": "Frontend not found"}, 500
-
-
-@app.get("/health")
-async def health_check():
-    return {"status": "OK"}
 
 
 @app.get("/db-test")

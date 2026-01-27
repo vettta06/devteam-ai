@@ -6,6 +6,7 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
+from app.models.token import RefreshToken
 from app.models.user import User
 from app.schemas import UserCreate, UserUpdate
 
@@ -78,6 +79,7 @@ def delete_user(db: Session, user_id: int) -> bool:
     user = get_user_by_id(db, user_id)
     if not user:
         return False
+    db.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete()
     db.delete(user)
     db.commit()
     return True
