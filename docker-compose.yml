@@ -15,5 +15,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5  
+    
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/devteam_ai
+      - SECRET_KEY=your-secret-key-here
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+
 volumes:
   postgres_data:
