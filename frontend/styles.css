@@ -438,3 +438,69 @@ button:active {
   opacity: 1;
   color: #c9302c;
 }
+
+/* Стили для ИИ-результата */
+.ai-result {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #b8e0d2;
+}
+
+.subtasks-list {
+  margin-bottom: 15px;
+}
+
+.subtask-item {
+  background: white;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.subtask-item strong {
+  color: #2e343a;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.reasoning-log {
+  background: #f0f7f4;
+  padding: 12px;
+  border-radius: 6px;
+  font-style: italic;
+  color: #444;
+}
+
+.reasoning-log p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.toggle-log {
+  background: #e6f2ff;
+  color: #337ab7;
+  border: 1px solid #337ab7;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.toggle-log:hover {
+  background: #d0e6ff;
+}
+
+
+.task-action-btn.ai-split {
+  color: #2E343A;
+  border-color: #B8E0D2;
+}
+
+.task-action-btn.ai-split:hover {
+  background-color: #B8E0D2;
+  color: #2E343A;
+}

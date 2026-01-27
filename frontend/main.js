@@ -201,17 +201,23 @@ async function loadTasks() {
         tasksList.innerHTML = data
           .map(
             (task) => `
-            <div class="task-card" data-id="${task.id}">
-              <button class="task-delete-icon" data-id="${task.id}">×</button>
-              <h3>${task.title}</h3>
-              <p>${task.description || "Без описания"}</p>
-              <p><strong>Статус:</strong> <span class="status status-${task.status}">${task.status}</span></p>
-              <p><strong>Создано:</strong> ${new Date(task.created_at).toLocaleString()}</p>
-              <div class="task-actions">
-                <button class="task-action-btn edit" data-id="${task.id}">Редактировать</button>
+              <div class="task-card" data-id="${task.id}">
+                <button class="task-delete-icon" data-id="${task.id}">×</button>
+                <h3>${task.title}</h3>
+                <p>${task.description || "Без описания"}</p>
+                <p><strong>Статус:</strong> <span class="status status-${task.status}">${task.status}</span></p>
+                <p><strong>Создано:</strong> ${task.created_at ? new Date(task.created_at).toLocaleString() : '—'}</p>
+                <div class="task-actions">
+                  <button class="task-action-btn edit" data-id="${task.id}">Редактировать</button>
+                  <button class="task-action-btn ai-split" data-id="${task.id}" data-title="${task.title}" data-desc="${task.description || ""}">Разбить на подзадачи</button>
+                </div>
+                <div class="ai-result" id="ai-result-${task.id}" style="display: none;">
+                  <div class="subtasks-list"></div>
+                  <button class="toggle-log" data-target="log-${task.id}">Подробнее (лог рассуждений)</button>
+                  <div class="reasoning-log" id="log-${task.id}" style="display: none;"></div>
+                </div>
               </div>
-            </div>
-          `,
+            `,
           )
           .join("");
       }
@@ -224,6 +230,7 @@ async function loadTasks() {
 
   // Добавляем обработчики после рендера
   setTimeout(() => {
+    // Удаление через крестик
     document.querySelectorAll(".task-delete-icon").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -232,17 +239,35 @@ async function loadTasks() {
       });
     });
 
-    document.querySelectorAll(".task-action-btn.delete").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const taskId = e.target.dataset.id;
-        deleteTask(taskId);
-      });
-    });
-
+    // Редактирование
     document.querySelectorAll(".task-action-btn.edit").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const taskId = e.target.dataset.id;
         editTask(taskId);
+      });
+    });
+
+    // ИИ-разбиение
+    document.querySelectorAll(".task-action-btn.ai-split").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const taskId = e.target.dataset.id;
+        const title = e.target.dataset.title;
+        const desc = e.target.dataset.desc;
+        const taskText = [title, desc].filter(Boolean).join(" ");
+        await splitTask(taskId, taskText);
+      });
+    });
+
+    // Лог рассуждений ("Подробнее")
+    document.querySelectorAll(".toggle-log").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const targetId = e.target.dataset.target;
+        const log = document.getElementById(targetId);
+        const isVisible = log.style.display === "block";
+        log.style.display = isVisible ? "none" : "block";
+        e.target.textContent = isVisible
+          ? "Подробнее (лог рассуждений)"
+          : "Скрыть лог рассуждений";
       });
     });
   }, 0);
@@ -288,6 +313,69 @@ async function handleCreateTask(e) {
     }
   } catch (err) {
     errorDiv.textContent = "Не удалось подключиться к серверу";
+  }
+}
+
+// Генерация подзадач через ИИ
+async function splitTask(taskId, taskText) {
+  const token = localStorage.getItem("access_token");
+  if (!token) return;
+
+  const button = document.querySelector(
+    `.task-action-btn.ai-split[data-id="${taskId}"]`,
+  );
+  const resultContainer = document.getElementById(`ai-result-${taskId}`);
+  const subtasksList = resultContainer.querySelector(".subtasks-list");
+  const logContainer = resultContainer.querySelector(".reasoning-log");
+
+  // Сохраняем исходный текст кнопки
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = "Генерация...";
+
+  try {
+    const res = await fetch(`${API_BASE}/ai/split-task`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ task: taskText }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+
+      // Рендерим подзадачи
+      subtasksList.innerHTML = data.subtasks
+        .map(
+          (sub) => `
+            <div class="subtask-item">
+              <strong>${sub.title}</strong>
+              <p>${sub.description || ""}</p>
+            </div>
+          `,
+        )
+        .join("");
+
+      // Рендерим лог рассуждений
+      logContainer.innerHTML = data.reasoning_log
+        .map((item) => `<p>${item}</p>`)
+        .join("");
+
+      // Показываем результат
+      resultContainer.style.display = "block";
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      alert(
+        `Ошибка: ${errorData.detail || "Не удалось сгенерировать подзадачи"}`,
+      );
+    }
+  } catch (err) {
+    alert("Не удалось подключиться к серверу");
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
   }
 }
 
