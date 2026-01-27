@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.agents.project_manager import project_manager_agent
 from app.core.auth import get_current_user
 from app.crud.task import (
     create_task,
@@ -10,6 +11,7 @@ from app.crud.task import (
     update_task,
 )
 from app.database import get_db
+from app.models.task import Subtask, Task
 from app.models.user import User
 from app.schemas.task import TaskCreate, TaskRead, TaskUpdate
 
@@ -87,3 +89,67 @@ async def delete__cur_task(
     if not success:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task deleted successfully"}
+
+
+@router.get("/{task_id}/subtasks")
+async def get_subtasks(
+    task_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Получение подзадач."""
+    task = (
+        db.query(Task)
+        .filter(Task.id == task_id, Task.user_id == current_user.id)
+        .first()
+    )
+    if not task:
+        raise HTTPException(404, "Task not found")
+    return task.ml_subtasks
+
+
+@router.put("/subtasks/{subtask_id}")
+async def update_subtask_status(
+    subtask_id: int,
+    status: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Изменение статутса подзадачи."""
+    subtask = (
+        db.query(Subtask)
+        .join(Task)
+        .filter(Subtask.id == subtask_id, Task.user_id == current_user.id)
+        .first()
+    )
+
+    if not subtask:
+        raise HTTPException(404, "Subtask not found")
+
+    subtask.status = status
+    db.commit()
+    return {"message": "Status updated"}
+
+
+@router.post("/{task_id}/split")
+async def split_task_into_subtasks(
+    task_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Разбить задачу на подзадачи с помощью AI."""
+    task = (
+        db.query(Task)
+        .filter(Task.id == task_id, Task.user_id == current_user.id)
+        .first()
+    )
+    if not task:
+        raise HTTPException(404, "Task not found")
+    result = await project_manager_agent(f"{task.title}: {task.description}")
+    for sub in result["subtasks"]:
+        db_sub = Subtask(
+            title=sub["title"], description=sub["description"], task_id=task_id
+        )
+        db.add(db_sub)
+    db.commit()
+    return result
